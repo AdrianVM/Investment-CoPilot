@@ -1,0 +1,73 @@
+# Backend
+
+ASP.NET Core Web API on .NET 10, built as a modular monolith: one deployable host plus one project pair per module.
+
+```
+src/
+  Host/                      composition root: authentication, health checks, endpoint mapping
+  SharedKernel/              cross-module primitives: ICurrentUser, IUserOwned, Money, ModuleDbContext
+  Modules/<Module>/
+    <Module>.Contracts/      the module's public interface; the only project other modules may reference
+    <Module>/                the implementation; its types are internal
+tests/
+  UnitTests/  IntegrationTests/  ArchitectureTests/
+```
+
+## Commands
+
+Run from `backend/`. The integration tests need Docker running; they start their own Postgres.
+
+```bash
+dotnet build
+dotnet test
+dotnet run --project src/Host          # needs `docker compose up -d --wait` from the repository root
+```
+
+Migrations are per module. For example, to add one to the Identity module:
+
+```bash
+dotnet ef migrations add <Name> --project src/Modules/Identity/Identity --startup-project src/Host \
+  --context IdentityDbContext --output-dir Persistence/Migrations
+```
+
+`dotnet ef` is a local tool; run `dotnet tool restore` from the repository root once. In Development the API applies pending migrations at startup. Other environments must run `dotnet ef database update` (per context) as an explicit step.
+
+## Module rules
+
+These rules are enforced by `tests/ArchitectureTests`, so breaking one fails the build:
+
+- A module references other modules only through their `*.Contracts` projects.
+- A module never uses another module's DbContext or tables. Each module has its own Postgres schema.
+- `SharedKernel` depends on no module.
+
+## User-owned data
+
+Every record that belongs to a user must be visible to, and changeable by, that user only. The module DbContext enforces this, so endpoints don't need their own ownership checks:
+
+1. **Implement `IUserOwned`** on every entity that belongs to a user, and put it in a DbContext derived from `ModuleDbContext<T>`. Configure the model in `ConfigureModel`, not `OnModelCreating`.
+2. **Queries are filtered automatically.** Every query on the entity is restricted to the current user by a named query filter (`UserOwned`), including `Find`, `ExecuteUpdate` and `ExecuteDelete`. With no signed-in user, queries return nothing.
+3. **The owner is set on insert.** `OwnerId` is always set from the current user when the record is saved, whatever the request contained. Changing `OwnerId` afterwards throws.
+4. **Another user's record returns 404**, exactly as if it didn't exist. Look the record up through the filtered context and return 404 when it isn't found. Never return 403 for it, because that would reveal that the record exists.
+5. **Never bypass the filter.** `IgnoreQueryFilters()` and raw SQL (`FromSql*`, `SqlQuery*`, `ExecuteSql*`) skip it, so they are allowed only in SharedKernel and Identity, which the architecture tests check.
+6. **Test cross-user access** for every endpoint that touches user-owned data: another user's record must return 404 and be left unchanged.
+
+These rules are covered by `tests/UnitTests/SharedKernel/UserOwnershipTests.cs` and `tests/IntegrationTests/Scoping/UserOwnedDataTests.cs`.
+
+## Money
+
+Use `Money` (a `decimal` amount plus an ISO 4217 currency code) for every monetary value, never `double` or `float`. Map it with `builder.ComplexProperty(x => x.Price, MoneyMapping.Configure)`, which stores `numeric(19,4)` plus a `char(3)` currency. Amounts are rounded to 4 decimal places with banker's rounding, and combining two currencies throws.
+
+## Authentication
+
+The API validates JWT access tokens from any standards-compliant OpenID Connect provider, configured only through settings:
+
+| Setting | Meaning |
+|---|---|
+| `Auth:Authority` | The provider's issuer URL |
+| `Auth:Audience` | The audience tokens must be issued for |
+| `Auth:RequireHttpsMetadata` | `true` except for a local development provider |
+| `Auth:Claims:Email`, `Auth:Claims:DisplayName` | Claim names for the user's email and name (defaults `email`, `name`) |
+
+Every endpoint requires a valid token, except `/health/live` and `/health/ready`. On a user's first request, the Identity module creates a local user, keyed by the token's issuer and subject. Code reads the current user through `ICurrentUser`.
+
+Modules add HTTP endpoints by registering an `IEndpointModule`; the host maps them all under `/api`.

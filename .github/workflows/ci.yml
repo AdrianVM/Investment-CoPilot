@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: "1"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: backend/global.json
+
+      - name: Restore
+        run: |
+          dotnet tool restore
+          dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore
+
+      - name: Check formatting
+        run: dotnet format --verify-no-changes --no-restore
+
+      - name: Unit tests
+        run: dotnet test tests/UnitTests --no-build
+
+      - name: Architecture tests
+        run: dotnet test tests/ArchitectureTests --no-build
+
+      # Testcontainers starts Postgres in the runner's Docker.
+      - name: Integration tests
+        run: dotnet test tests/IntegrationTests --no-build
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            frontend/tools/openapi-codegen/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      # No production sign-in provider is configured yet, so build with the development settings.
+      # This checks that the app compiles and bundles; it is not a deployable artifact.
+      - name: Build
+        run: npm run build:local
+
+  api-client:
+    name: Generated API client is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: backend/global.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            frontend/tools/openapi-codegen/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Check generated API files
+        run: npm run check:api
+        working-directory: frontend

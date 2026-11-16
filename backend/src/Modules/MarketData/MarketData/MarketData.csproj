@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\MarketData.Contracts\MarketData.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
+  </ItemGroup>
+
+
+</Project>

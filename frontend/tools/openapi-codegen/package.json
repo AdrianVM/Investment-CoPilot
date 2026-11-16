@@ -1,0 +1,10 @@
+{
+  "name": "openapi-codegen",
+  "private": true,
+  "description": "Isolated install of the API client generator. @hey-api/openapi-ts needs the TypeScript compiler API, which TypeScript 7 (used by the app) no longer provides, so it gets TypeScript 6 here.",
+  "type": "module",
+  "devDependencies": {
+    "@hey-api/openapi-ts": "0.99.0",
+    "typescript": "6.0.3"
+  }
+}

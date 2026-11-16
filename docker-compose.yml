@@ -1,0 +1,41 @@
+# Local development only. Credentials here are not secrets and must never be used elsewhere.
+name: investment-copilot
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: investment_copilot
+      POSTGRES_USER: copilot
+      POSTGRES_PASSWORD: copilot
+    ports:
+      - "5433:5432" # 5433 on the host, so it does not clash with a locally installed Postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U copilot -d investment_copilot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  keycloak:
+    # Development-only OpenID Connect provider. The application depends only on standard OIDC, not on Keycloak.
+    image: quay.io/keycloak/keycloak:26.4
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+      KC_HOSTNAME: http://localhost:8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dev/keycloak:/opt/keycloak/data/import:ro
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"UP\"' <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  postgres-data:

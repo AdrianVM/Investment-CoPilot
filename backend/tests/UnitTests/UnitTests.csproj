@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SharedKernel\SharedKernel.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Assessment\Assessment\Assessment.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Identity\Identity.csproj" />
+    <ProjectReference Include="..\..\src\Modules\MarketData\MarketData\MarketData.csproj" />
+  </ItemGroup>
+
+</Project>

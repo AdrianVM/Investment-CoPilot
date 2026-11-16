@@ -1,0 +1,81 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Investment Co-Pilot API",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/me": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get the signed-in user's profile",
+        "operationId": "GetCurrentUser",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserProfile": {
+        "required": [
+          "id",
+          "email",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Access token from the configured OpenID Connect provider.",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": [ ]
+    }
+  ],
+  "tags": [
+    {
+      "name": "Users"
+    }
+  ]
+}
