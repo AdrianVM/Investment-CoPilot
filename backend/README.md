@@ -71,3 +71,16 @@ The API validates JWT access tokens from any standards-compliant OpenID Connect 
 Every endpoint requires a valid token, except `/health/live` and `/health/ready`. On a user's first request, the Identity module creates a local user, keyed by the token's issuer and subject. Code reads the current user through `ICurrentUser`.
 
 Modules add HTTP endpoints by registering an `IEndpointModule`; the host maps them all under `/api`.
+
+## Market data
+
+The MarketData module looks up a stock's current fundamentals by ticker symbol, through `IMarketDataModule` in-process and `GET /api/market-data/stocks/{symbol}` over HTTP.
+
+| Setting | Meaning |
+|---|---|
+| `MarketData:Provider` | Which data source to use. Startup fails if it names an unknown one. Only `Fake` exists so far: fixed sample data for `LYNCH`, `BIGCO`, `SPARSE`, `LOSSCO` and `EUROCO`. |
+| `MarketData:CacheMaxAge` | How long fetched data is reused, shared by all users (default `1.00:00:00`, one day). After that it is fetched again; if the provider then fails, the old data is returned marked stale. |
+
+Units are fixed for every provider: money in the stock's listing currency, ratios as plain numbers, percentages as fractions (0.15 = 15 %), and anything a provider cannot supply as `null`, never zero.
+
+To add a real data source, implement the internal `IMarketDataProvider` (in `Providers/`), register it in `MarketDataModule`, and select it with `MarketData:Provider`. Nothing else changes.

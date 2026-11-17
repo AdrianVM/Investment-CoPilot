@@ -35,5 +35,20 @@ internal static class OpenApiSetup
                 });
                 return Task.CompletedTask;
             });
+
+            // The API writes decimals (money, ratios) as JSON numbers. ASP.NET Core documents them as "number or
+            // string" because it also accepts strings on input, which would type them as number | string in the
+            // generated client. Document what the API sends: a number.
+            options.AddSchemaTransformer((schema, context, _) =>
+            {
+                var type = context.JsonTypeInfo.Type;
+                if ((Nullable.GetUnderlyingType(type) ?? type) == typeof(decimal) && schema.Type is { } schemaType)
+                {
+                    schema.Type = schemaType & ~JsonSchemaType.String;
+                    schema.Pattern = null;
+                }
+
+                return Task.CompletedTask;
+            });
         });
 }

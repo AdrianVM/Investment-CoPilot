@@ -39,6 +39,7 @@ describe('signed out', () => {
     expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument()
     expect(screen.getByText('Sign in to see your profile.')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Your profile' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Look up a stock' })).not.toBeInTheDocument()
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
@@ -60,6 +61,14 @@ describe('signed in', () => {
 
     expect(await screen.findByRole('button', { name: 'Sign out' })).toBeInTheDocument()
     expect(await screen.findByText('Alice Tester')).toBeInTheDocument()
+  })
+
+  it('offers the stock lookup', async () => {
+    const { userManager } = createFakeUserManager(fakeUser())
+
+    renderApp(userManager)
+
+    expect(await screen.findByRole('heading', { name: 'Look up a stock' })).toBeInTheDocument()
   })
 
   it('is restored by a silent sign-in after a page reload', async () => {

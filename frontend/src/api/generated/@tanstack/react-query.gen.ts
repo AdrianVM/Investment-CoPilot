@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { getCurrentUser, type Options } from '../sdk.gen';
-import type { GetCurrentUserData, GetCurrentUserResponse } from '../types.gen';
+import { getCurrentUser, getStockFundamentals, type Options } from '../sdk.gen';
+import type { GetCurrentUserData, GetCurrentUserResponse, GetStockFundamentalsData, GetStockFundamentalsError, GetStockFundamentalsResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -55,4 +55,24 @@ export const getCurrentUserOptions = (options?: Options<GetCurrentUserData>) => 
         return data;
     },
     queryKey: getCurrentUserQueryKey(options)
+});
+
+export const getStockFundamentalsQueryKey = (options: Options<GetStockFundamentalsData>) => createQueryKey('getStockFundamentals', options);
+
+/**
+ * Get a stock's current fundamentals by ticker symbol
+ *
+ * Money is in the stock's listing currency; percentages are fractions (0.15 = 15 %). Metrics the data source does not supply are null. When the source is unavailable, the last cached data is returned with isStale set.
+ */
+export const getStockFundamentalsOptions = (options: Options<GetStockFundamentalsData>) => queryOptions<GetStockFundamentalsResponse, GetStockFundamentalsError, GetStockFundamentalsResponse, ReturnType<typeof getStockFundamentalsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getStockFundamentals({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getStockFundamentalsQueryKey(options)
 });
