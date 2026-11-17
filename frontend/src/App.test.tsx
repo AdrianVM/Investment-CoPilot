@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
@@ -36,8 +36,9 @@ describe('signed out', () => {
 
     renderApp(userManager)
 
-    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument()
-    expect(screen.getByText('Sign in to see your profile.')).toBeInTheDocument()
+    expect(await within(await screen.findByRole('banner')).findByRole('button', { name: 'Sign in' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Read a company’s key figures in one place' })).toBeInTheDocument()
+    expect(within(screen.getByRole('main')).getByRole('button', { name: 'Sign in' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Your profile' })).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Look up a stock' })).not.toBeInTheDocument()
     expect(fetchMock).not.toHaveBeenCalled()
@@ -47,7 +48,7 @@ describe('signed out', () => {
     const { fake, userManager } = createFakeUserManager()
     renderApp(userManager)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Sign in' }))
+    await userEvent.click(await within(await screen.findByRole('banner')).findByRole('button', { name: 'Sign in' }))
 
     expect(fake.signinRedirect).toHaveBeenCalledOnce()
   })
@@ -61,6 +62,17 @@ describe('signed in', () => {
 
     expect(await screen.findByRole('button', { name: 'Sign out' })).toBeInTheDocument()
     expect(await screen.findByText('Alice Tester')).toBeInTheDocument()
+  })
+
+  it('shows the user\'s name from the sign-in token in the header', async () => {
+    const { userManager } = createFakeUserManager(
+      fakeUser({ profile: { sub: 'sub-1', iss: 'https://issuer.test', aud: 'web', exp: 0, iat: 0, name: 'Alice T.' } }),
+    )
+
+    renderApp(userManager)
+
+    const banner = await screen.findByRole('banner')
+    expect(await within(banner).findByText('Alice T.')).toBeInTheDocument()
   })
 
   it('offers the stock lookup', async () => {
@@ -110,7 +122,7 @@ describe('signed out again', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Sign out' }))
 
-    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument()
+    expect(await within(await screen.findByRole('banner')).findByRole('button', { name: 'Sign in' })).toBeInTheDocument()
     expect(screen.queryByText('Alice Tester')).not.toBeInTheDocument()
     expect(fake.removeUser).toHaveBeenCalledOnce()
     expect(fake.signoutRedirect).toHaveBeenCalledExactlyOnceWith({ id_token_hint: 'id-token' })
@@ -124,6 +136,6 @@ describe('signed out again', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Sign out' }))
 
-    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument()
+    expect(await within(await screen.findByRole('banner')).findByRole('button', { name: 'Sign in' })).toBeInTheDocument()
   })
 })

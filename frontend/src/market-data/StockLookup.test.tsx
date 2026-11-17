@@ -66,7 +66,8 @@ describe('StockLookup', () => {
 
     await lookUp(' lynch ')
 
-    expect(await screen.findByRole('heading', { name: 'Lynchpin Tools Inc. (sample) (LYNCH)' })).toBeInTheDocument()
+    const sheet = await screen.findByRole('article', { name: 'Lynchpin Tools Inc. (sample)' })
+    expect(sheet).toHaveTextContent('LYNCH')
     expect(metric('Price')).toBe(formatMoney(lynch.price!))
     expect(metric('Market capitalisation')).toBe(formatCompactMoney(lynch.marketCap!))
     expect(metric('Trailing P/E')).toBe(formatRatio(14.2))
@@ -75,7 +76,9 @@ describe('StockLookup', () => {
     expect(metric('Institutional ownership')).toBe(formatPercent(0.07))
     expect(metric('Insider ownership')).toBe(formatPercent(0.26))
     expect(metric('Debt to equity')).toBe(formatRatio(0.18))
-    expect(screen.getByText(/Source: Sample data \(fake provider\)/)).toHaveTextContent(formatDateTime(lynch.asOf))
+    expect(screen.getByText(/^Sample data \(fake provider\), as of/)).toHaveTextContent(
+      `Sample data (fake provider), as of ${formatDateTime(lynch.asOf)}. Prices in USD.`,
+    )
     expect(screen.queryByText(/could not be refreshed/)).not.toBeInTheDocument()
 
     const request = fetchMock.mock.calls[0][0] as Request
@@ -88,7 +91,7 @@ describe('StockLookup', () => {
 
     await lookUp('LYNCH')
 
-    await screen.findByRole('heading', { name: /LYNCH/ })
+    await screen.findByRole('article', { name: 'Lynchpin Tools Inc. (sample)' })
     expect(metric('Forward P/E')).toBe('Not available')
     expect(metric('Institutional ownership')).toBe('Not available')
     expect(metric('Price')).toBe('Not available')
@@ -101,6 +104,7 @@ describe('StockLookup', () => {
     await lookUp('LYNCH')
 
     const note = await screen.findByText(/could not be refreshed/)
+    expect(note.textContent).toMatch(/^Out of date:/)
     expect(note).toHaveTextContent(formatDateTime(lynch.asOf))
   })
 

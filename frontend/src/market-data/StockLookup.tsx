@@ -1,8 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { type FormEvent, useId, useState } from 'react'
+import { type FormEvent, useState } from 'react'
 import { getStockFundamentalsQueryKey } from '../api/generated/@tanstack/react-query.gen'
 import { getStockFundamentals } from '../api/generated/sdk.gen'
 import type { StockFundamentals } from '../api/generated/types.gen'
+import { Button } from '../ui/Button'
+import { FigureSheet, type FigureRow } from '../ui/FigureSheet'
+import { Notice } from '../ui/Notice'
+import { TextField } from '../ui/TextField'
 import {
   formatCompactMoney,
   formatDateTime,
@@ -32,7 +36,6 @@ async function fetchStock(symbol: string, signal: AbortSignal) {
 
 /** Lets the user enter a ticker symbol and shows the stock's fundamentals from GET /api/market-data/stocks/{symbol}. */
 export function StockLookup() {
-  const inputId = useId()
   const [input, setInput] = useState('')
   const [symbol, setSymbol] = useState<string | null>(null)
   const [invalidInput, setInvalidInput] = useState<string | null>(null)
@@ -51,25 +54,29 @@ export function StockLookup() {
   }
 
   return (
-    <section aria-labelledby="stock-lookup-heading">
+    <section className="stock-lookup" aria-labelledby="stock-lookup-heading">
       <h2 id="stock-lookup-heading">Look up a stock</h2>
-      <form onSubmit={submit} className="stock-lookup-form">
-        <label htmlFor={inputId}>Ticker symbol</label>
-        <input
-          id={inputId}
+      <form onSubmit={submit} className="stock-lookup__form">
+        <TextField
+          label="Ticker symbol"
+          hint="For example LYNCH, or SAP.DE for an exchange suffix."
           value={input}
           onChange={(event) => setInput(event.target.value)}
           autoComplete="off"
+          autoCapitalize="characters"
           spellCheck={false}
-          placeholder="e.g. LYNCH"
+          trailing={
+            <Button type="submit" variant="primary">
+              Look up
+            </Button>
+          }
         />
-        <button type="submit">Look up</button>
       </form>
 
       {invalidInput !== null ? (
         <InvalidSymbol input={invalidInput} />
       ) : symbol === null ? null : query.isPending ? (
-        <p>Looking up {symbol}…</p>
+        <p className="stock-lookup__status">Looking up {symbol}…</p>
       ) : query.isError ? (
         <LookupFailed symbol={symbol} error={query.error} />
       ) : (
@@ -81,10 +88,10 @@ export function StockLookup() {
 
 function InvalidSymbol({ input }: { input: string }) {
   return (
-    <p role="alert">
+    <Notice tone="danger" lead="Check the symbol:">
       {input === '' ? 'Enter a ticker symbol.' : `“${input}” is not a valid ticker symbol.`} A symbol has 1 to 15
       letters, digits, “.” or “-”.
-    </p>
+    </Notice>
   )
 }
 
@@ -94,49 +101,51 @@ function LookupFailed({ symbol, error }: { symbol: string; error: Error }) {
     return <InvalidSymbol input={symbol} />
   }
   if (status === 404) {
-    return <p role="alert">No stock found for “{symbol}”.</p>
+    return (
+      <Notice tone="info" lead="Not found:" announce>
+        No stock found for “{symbol}”.
+      </Notice>
+    )
   }
-  return <p role="alert">Market data could not be loaded. Try again later.</p>
+  return <Notice tone="danger">Market data could not be loaded. Try again later.</Notice>
 }
 
 const notAvailable = 'Not available'
 
-function StockDetails({ stock }: { stock: StockFundamentals }) {
-  const metrics: [label: string, value: string][] = [
-    ['Price', stock.price ? formatMoney(stock.price) : notAvailable],
-    ['Market capitalisation', stock.marketCap ? formatCompactMoney(stock.marketCap) : notAvailable],
-    ['Trailing P/E', stock.trailingPe !== null ? formatRatio(stock.trailingPe) : notAvailable],
-    ['Forward P/E', stock.forwardPe !== null ? formatRatio(stock.forwardPe) : notAvailable],
-    ['EPS growth (year over year)', stock.epsGrowth !== null ? formatPercent(stock.epsGrowth) : notAvailable],
-    [
-      'Institutional ownership',
-      stock.institutionalOwnership !== null ? formatPercent(stock.institutionalOwnership) : notAvailable,
-    ],
-    ['Insider ownership', stock.insiderOwnership !== null ? formatPercent(stock.insiderOwnership) : notAvailable],
-    ['Debt to equity', stock.debtToEquity !== null ? formatRatio(stock.debtToEquity) : notAvailable],
-  ]
+function row(label: string, value: string | null): FigureRow {
+  return value === null ? { label, value: notAvailable, missing: true } : { label, value }
+}
 
+function map<T>(value: T | null, format: (value: T) => string) {
+  return value === null ? null : format(value)
+}
+
+function StockDetails({ stock }: { stock: StockFundamentals }) {
+  const asOf = formatDateTime(stock.asOf)
   return (
-    <article aria-labelledby="stock-heading">
-      <h3 id="stock-heading">
-        {stock.companyName} ({stock.symbol})
-      </h3>
+    <div className="stock-lookup__result">
       {stock.isStale && (
-        <p className="stale-note">
-          This data could not be refreshed and may be out of date. It is from {formatDateTime(stock.asOf)}.
-        </p>
+        <Notice tone="warning">This data could not be refreshed. It is from {asOf}.</Notice>
       )}
-      <dl>
-        {metrics.map(([label, value]) => (
-          <div key={label} className="metric">
-            <dt>{label}</dt>
-            <dd>{value}</dd>
-          </div>
-        ))}
-      </dl>
-      <p className="stock-source">
-        Source: {stock.source} · As of {formatDateTime(stock.asOf)} · Prices in {stock.currency}
-      </p>
-    </article>
+      <FigureSheet
+        title={stock.companyName}
+        aside={stock.symbol}
+        rows={[
+          row('Price', map(stock.price, formatMoney)),
+          row('Market capitalisation', map(stock.marketCap, formatCompactMoney)),
+          row('Trailing P/E', map(stock.trailingPe, formatRatio)),
+          row('Forward P/E', map(stock.forwardPe, formatRatio)),
+          row('EPS growth (year over year)', map(stock.epsGrowth, formatPercent)),
+          row('Institutional ownership', map(stock.institutionalOwnership, formatPercent)),
+          row('Insider ownership', map(stock.insiderOwnership, formatPercent)),
+          row('Debt to equity', map(stock.debtToEquity, formatRatio)),
+        ]}
+        footer={
+          <p>
+            {stock.source}, as of {asOf}. Prices in {stock.currency}.
+          </p>
+        }
+      />
+    </div>
   )
 }
