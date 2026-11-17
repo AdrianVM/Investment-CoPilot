@@ -1,0 +1,57 @@
+/*
+ * Design tokens. The only place colours, type sizes and spacing are defined; everything else uses these.
+ * Colours use light-dark(<light>, <dark>): the browser picks the theme from the system preference
+ * (color-scheme in base.css) and switches live. Contrast is checked by tokens.test.ts.
+ */
+:root {
+  /* Colour */
+  --color-paper: light-dark(#f5f6f8, #13161d);
+  --color-surface: light-dark(#ffffff, #1b1f28);
+  --color-text: light-dark(#1b1f27, #e7e9ee);
+  --color-text-muted: light-dark(#59606e, #a3aab7);
+  --color-rule: light-dark(#d6dae1, #2d333e);
+  --color-control-border: light-dark(#7d8697, #747d8e);
+  --color-ink: light-dark(#2e3d9a, #a3b0f5);
+  --color-ink-hover: light-dark(#24307d, #c0c9f8);
+  --color-on-ink: light-dark(#ffffff, #13161d);
+  --color-warning: light-dark(#7a4a00, #f0b65a);
+  --color-warning-surface: light-dark(#fcf1dc, #2b2314);
+  --color-danger: light-dark(#a8261d, #f29890);
+  --color-danger-surface: light-dark(#fbe9e7, #2e1a19);
+  --color-info: light-dark(#2e3d9a, #a3b0f5);
+  --color-info-surface: light-dark(#eceefa, #1d2235);
+
+  /* Typography */
+  --font-sans: 'Atkinson Hyperlegible Next', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.2rem;
+  --text-xl: 1.44rem;
+  --text-2xl: 1.75rem;
+  --leading-body: 1.5;
+  --leading-heading: 1.2;
+  --weight-body: 400;
+  --weight-figure: 500;
+  --weight-strong: 600;
+  --measure: 68ch;
+
+  /* Spacing (4 px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 2.5rem;
+  --space-8: 3rem;
+
+  /* Shape */
+  --radius-control: 4px;
+  --radius-sheet: 6px;
+  --border-width: 1px;
+  --focus-width: 2px;
+
+  /* Layout */
+  --content-width: 60rem;
+  --transition-fast: 120ms ease-out;
+}

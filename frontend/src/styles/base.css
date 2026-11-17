@@ -1,0 +1,107 @@
+/*
+ * Base styles: font, element defaults and app-wide accessibility rules. Uses tokens.css only.
+ * Spec visual-design: theme from the system preference, visible focus, reduced motion, tabular figures.
+ */
+
+@font-face {
+  font-family: 'Atkinson Hyperlegible Next';
+  src: url('/fonts/AtkinsonHyperlegibleNext-Variable.woff2') format('woff2');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Light fallbacks for browsers without light-dark(); they ignore the token declarations. */
+  background: #f5f6f8;
+  color: #1b1f27;
+
+  color-scheme: light dark;
+  background: var(--color-paper);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 100%;
+  font-weight: var(--weight-body);
+  line-height: var(--leading-body);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: var(--weight-strong);
+  line-height: var(--leading-heading);
+}
+
+h2 {
+  font-size: var(--text-xl);
+}
+
+h3 {
+  font-size: var(--text-lg);
+}
+
+p {
+  margin: 0;
+  max-width: var(--measure);
+}
+
+dl,
+dd {
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--color-ink);
+  text-underline-offset: 0.15em;
+}
+
+/* One focus indicator for every interactive element, in both themes. */
+:focus-visible {
+  outline: var(--focus-width) solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+/* Digits of equal width, so values line up down a column. */
+.figure {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-figure);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
