@@ -1,3 +1,5 @@
+using InvestmentCoPilot.SharedKernel;
+
 namespace InvestmentCoPilot.MarketData.Contracts;
 
 /// <summary>
@@ -12,4 +14,10 @@ public interface IMarketDataModule
     /// is returned with <see cref="StockFundamentals.IsStale"/> set.
     /// </summary>
     Task<StockLookupResult> GetStockFundamentalsAsync(string symbol, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Converts an amount to another currency at the current exchange rate. Converting to the same currency returns
+    /// the amount unchanged with rate 1. When no rate is available the result says so; no estimate is used.
+    /// </summary>
+    Task<CurrencyConversionResult> ConvertAsync(Money amount, string toCurrency, CancellationToken cancellationToken = default);
 }

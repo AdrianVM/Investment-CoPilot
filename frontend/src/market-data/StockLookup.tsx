@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { type FormEvent, useState } from 'react'
+import { ApiStatusError } from '../api/apiStatusError'
+import { LynchChecklist } from '../assessment/LynchChecklist'
 import { getStockFundamentalsQueryKey } from '../api/generated/@tanstack/react-query.gen'
 import { getStockFundamentals } from '../api/generated/sdk.gen'
 import type { StockFundamentals } from '../api/generated/types.gen'
@@ -16,20 +18,10 @@ import {
   normaliseSymbol,
 } from './format'
 
-/** A failed lookup, with the HTTP status so the message (and retry policy) can depend on it. */
-export class StockLookupError extends Error {
-  readonly status: number
-
-  constructor(status: number) {
-    super(`Stock lookup failed with HTTP ${status}`)
-    this.status = status
-  }
-}
-
 async function fetchStock(symbol: string, signal: AbortSignal) {
   const { data, response } = await getStockFundamentals({ path: { symbol }, signal })
   if (!data) {
-    throw new StockLookupError(response?.status ?? 0)
+    throw new ApiStatusError(response?.status ?? 0, 'Stock lookup')
   }
   return data
 }
@@ -96,7 +88,7 @@ function InvalidSymbol({ input }: { input: string }) {
 }
 
 function LookupFailed({ symbol, error }: { symbol: string; error: Error }) {
-  const status = error instanceof StockLookupError ? error.status : 0
+  const status = error instanceof ApiStatusError ? error.status : 0
   if (status === 400) {
     return <InvalidSymbol input={symbol} />
   }
@@ -146,6 +138,7 @@ function StockDetails({ stock }: { stock: StockFundamentals }) {
           </p>
         }
       />
+      <LynchChecklist symbol={stock.symbol} />
     </div>
   )
 }

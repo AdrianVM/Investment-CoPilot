@@ -1,7 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Assessment.Contracts\Assessment.Contracts.csproj" />
+    <ProjectReference Include="..\..\MarketData\MarketData.Contracts\MarketData.Contracts.csproj" />
     <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
   </ItemGroup>
 

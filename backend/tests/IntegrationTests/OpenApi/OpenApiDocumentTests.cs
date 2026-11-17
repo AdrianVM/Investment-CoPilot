@@ -11,7 +11,7 @@ public sealed class OpenApiDocumentTests(PostgresFixture postgres) : IAsyncDispo
     public ValueTask DisposeAsync() => factory.DisposeAsync();
 
     [Fact]
-    public async Task Decimals_are_documented_as_numbers_only()
+    public async Task Numbers_are_documented_as_numbers_only()
     {
         using var client = factory.CreateClient();
         var document = JsonNode.Parse(await client.GetStringAsync("/openapi/v1.json"))!;
@@ -21,5 +21,8 @@ public sealed class OpenApiDocumentTests(PostgresFixture postgres) : IAsyncDispo
         var trailingPe = schemas["StockFundamentals"]!["properties"]!["trailingPe"]!;
         Assert.Equal(["null", "number"], trailingPe["type"]!.AsArray().Select(t => t!.GetValue<string>()));
         Assert.Null(trailingPe["pattern"]);
+        var met = schemas["AssessmentSummary"]!["properties"]!["met"]!;
+        Assert.Equal("integer", met["type"]!.GetValue<string>());
+        Assert.Null(met["pattern"]);
     }
 }

@@ -80,7 +80,29 @@ The MarketData module looks up a stock's current fundamentals by ticker symbol, 
 |---|---|
 | `MarketData:Provider` | Which data source to use. Startup fails if it names an unknown one. Only `Fake` exists so far: fixed sample data for `LYNCH`, `BIGCO`, `SPARSE`, `LOSSCO` and `EUROCO`. |
 | `MarketData:CacheMaxAge` | How long fetched data is reused, shared by all users (default `1.00:00:00`, one day). After that it is fetched again; if the provider then fails, the old data is returned marked stale. |
+| `MarketData:ExchangeRateProvider` | Which exchange rate source to use. Startup fails if it names an unknown one. Only `Fake` exists so far: fixed sample rates between USD, EUR, GBP, CHF, JPY and CAD. Other currencies have no rate. |
 
 Units are fixed for every provider: money in the stock's listing currency, ratios as plain numbers, percentages as fractions (0.15 = 15 %), and anything a provider cannot supply as `null`, never zero.
 
 To add a real data source, implement the internal `IMarketDataProvider` (in `Providers/`), register it in `MarketDataModule`, and select it with `MarketData:Provider`. Nothing else changes.
+
+`IMarketDataModule.ConvertAsync` converts an amount to another currency and reports the rate, its source and as-of time. When no rate is available it says so; it never guesses or falls back to a rate of 1.
+
+## Strategy assessment
+
+The Assessment module checks a stock against an investment strategy, on demand, through `IAssessmentModule.AssessAsync` and `GET /api/assessments/{strategy}/stocks/{symbol}`. Nothing is stored.
+
+The only strategy is `peter-lynch`, with these strict thresholds (a value equal to the threshold does not meet it):
+
+| Criterion | Meets when |
+|---|---|
+| P/E | trailing P/E < 25 **and** forward P/E < 15 |
+| Institutional ownership | < 0.10 (10 %) |
+| Insider ownership | > 0.20 (20 %) |
+| EPS growth | > 0.15 (15 %) |
+| Debt to equity | < 0.35 |
+| Market capitalisation | < 5,000,000,000 USD, converting other currencies at the current rate |
+
+A missing value makes a criterion "cannot be assessed", never "does not meet". The P/E criterion fails if either P/E present is too high, and is met only when both are present and low enough. A market cap that cannot be converted (no rate) cannot be assessed.
+
+To add a strategy, implement `IStrategy` (in `Strategies/`) as an ordered list of `ICriterion`, and register it in `AssessmentModule`. The endpoint, contracts and web app need no changes.

@@ -1,3 +1,4 @@
+using InvestmentCoPilot.MarketData.ExchangeRates;
 using InvestmentCoPilot.MarketData.Providers;
 using Microsoft.Extensions.Options;
 
@@ -11,12 +12,17 @@ internal sealed class MarketDataOptions
     /// <summary>Name of the provider to use, matching <see cref="IMarketDataProvider.Name"/> (case-insensitive).</summary>
     public string? Provider { get; set; }
 
+    /// <summary>Name of the exchange rate provider, matching <see cref="IExchangeRateProvider.Name"/> (case-insensitive).</summary>
+    public string? ExchangeRateProvider { get; set; }
+
     /// <summary>How long fetched fundamentals are reused before they are fetched again.</summary>
     public TimeSpan CacheMaxAge { get; set; } = TimeSpan.FromHours(24);
 }
 
 /// <summary>Checks the settings against the registered providers, so a typo fails at startup rather than on first use.</summary>
-internal sealed class MarketDataOptionsValidator(IEnumerable<IMarketDataProvider> providers) : IValidateOptions<MarketDataOptions>
+internal sealed class MarketDataOptionsValidator(
+    IEnumerable<IMarketDataProvider> providers,
+    IEnumerable<IExchangeRateProvider> rateProviders) : IValidateOptions<MarketDataOptions>
 {
     public ValidateOptionsResult Validate(string? name, MarketDataOptions options)
     {
@@ -31,6 +37,18 @@ internal sealed class MarketDataOptionsValidator(IEnumerable<IMarketDataProvider
         {
             failures.Add(
                 $"{MarketDataOptions.SectionName}:{nameof(MarketDataOptions.Provider)} is '{options.Provider}', which is not a known provider. Valid providers: {valid}.");
+        }
+
+        var validRateProviders = string.Join(", ", rateProviders.Select(p => p.Name).Order(StringComparer.Ordinal));
+        if (string.IsNullOrWhiteSpace(options.ExchangeRateProvider))
+        {
+            failures.Add(
+                $"{MarketDataOptions.SectionName}:{nameof(MarketDataOptions.ExchangeRateProvider)} is not set. Valid providers: {validRateProviders}.");
+        }
+        else if (!rateProviders.Any(p => string.Equals(p.Name, options.ExchangeRateProvider, StringComparison.OrdinalIgnoreCase)))
+        {
+            failures.Add(
+                $"{MarketDataOptions.SectionName}:{nameof(MarketDataOptions.ExchangeRateProvider)} is '{options.ExchangeRateProvider}', which is not a known provider. Valid providers: {validRateProviders}.");
         }
 
         if (options.CacheMaxAge <= TimeSpan.Zero)

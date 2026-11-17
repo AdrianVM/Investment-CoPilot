@@ -327,3 +327,85 @@
   color: var(--color-text);
   overflow-wrap: anywhere;
 }
+
+/* Strategy checklist: one row per criterion; the verdict is read first and shown by icon, text and colour. */
+.checklist {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-rule);
+  border-radius: var(--radius-sheet);
+}
+
+.checklist__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.checklist__summary {
+  font-weight: var(--weight-strong);
+}
+
+.checklist__items {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checklist__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-1) var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: var(--border-width) solid var(--color-rule);
+}
+
+.checklist__verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: var(--weight-strong);
+}
+
+.checklist__icon {
+  flex: none;
+}
+
+.checklist__item--meets .checklist__verdict {
+  color: var(--color-pass);
+}
+
+.checklist__item--doesNotMeet .checklist__verdict {
+  color: var(--color-fail);
+}
+
+.checklist__item--cannotAssess .checklist__verdict,
+.checklist__item--cannotAssess .checklist__detail {
+  color: var(--color-text-muted);
+}
+
+.checklist__name {
+  font-weight: var(--weight-strong);
+}
+
+.checklist__detail {
+  overflow-wrap: anywhere;
+}
+
+.checklist__status,
+.checklist__disclaimer {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+@media (min-width: 40rem) {
+  .checklist__item {
+    grid-template-columns: 11rem 12rem minmax(0, 1fr);
+    align-items: baseline;
+  }
+}

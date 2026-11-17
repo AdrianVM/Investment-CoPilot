@@ -20,6 +20,11 @@
   --color-danger-surface: light-dark(#fbe9e7, #2e1a19);
   --color-info: light-dark(#2e3d9a, #a3b0f5);
   --color-info-surface: light-dark(#eceefa, #1d2235);
+  /* Assessment verdicts; reserved for "meets" and "does not meet", always with text and icon. */
+  --color-pass: light-dark(#1d6b3c, #6fd49a);
+  --color-pass-surface: light-dark(#e5f4ea, #142a1d);
+  --color-fail: light-dark(#a8261d, #f29890);
+  --color-fail-surface: light-dark(#fbe9e7, #2e1a19);
 
   /* Typography */
   --font-sans: 'Atkinson Hyperlegible Next', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;

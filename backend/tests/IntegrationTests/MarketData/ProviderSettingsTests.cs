@@ -20,6 +20,18 @@ public sealed class ProviderSettingsTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task Startup_fails_when_the_exchange_rate_provider_is_unknown()
+    {
+        await using var factory = new ApiFactory(postgres).WithSetting("MarketData:ExchangeRateProvider", "NoSuchBank");
+
+        var error = Assert.Throws<OptionsValidationException>(() => factory.Services);
+
+        Assert.Contains("MarketData:ExchangeRateProvider", error.Message, StringComparison.Ordinal);
+        Assert.Contains("'NoSuchBank'", error.Message, StringComparison.Ordinal);
+        Assert.Contains("Valid providers: Fake", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Startup_fails_when_the_cache_age_is_not_positive()
     {
         await using var factory = new ApiFactory(postgres).WithSetting("MarketData:CacheMaxAge", "00:00:00");
