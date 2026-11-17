@@ -7,6 +7,13 @@ internal static class OpenApiSetup
 {
     private const string BearerScheme = "Bearer";
 
+    private static readonly HashSet<Type> NumericTypes =
+    [
+        typeof(decimal), typeof(double), typeof(float),
+        typeof(int), typeof(long), typeof(short), typeof(byte),
+        typeof(uint), typeof(ulong), typeof(ushort), typeof(sbyte),
+    ];
+
     public static IServiceCollection AddApiDocument(this IServiceCollection services) =>
         services.AddOpenApi(options =>
         {
@@ -36,13 +43,13 @@ internal static class OpenApiSetup
                 return Task.CompletedTask;
             });
 
-            // The API writes decimals (money, ratios) as JSON numbers. ASP.NET Core documents them as "number or
+            // The API writes numbers (money, ratios, counts) as JSON numbers. ASP.NET Core documents them as "number or
             // string" because it also accepts strings on input, which would type them as number | string in the
             // generated client. Document what the API sends: a number.
             options.AddSchemaTransformer((schema, context, _) =>
             {
                 var type = context.JsonTypeInfo.Type;
-                if ((Nullable.GetUnderlyingType(type) ?? type) == typeof(decimal) && schema.Type is { } schemaType)
+                if (NumericTypes.Contains(Nullable.GetUnderlyingType(type) ?? type) && schema.Type is { } schemaType)
                 {
                     schema.Type = schemaType & ~JsonSchemaType.String;
                     schema.Pattern = null;

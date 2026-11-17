@@ -65,15 +65,17 @@ npm run dev
 
 Open <http://localhost:5173>, choose **Sign in**, and sign in as `alice` or `bob`. The app shows the signed-in user's profile and a stock lookup.
 
-The stock lookup uses made-up sample data for now (no real market data provider is connected). These symbols exist:
+Below a stock's figures, the app checks it against Peter Lynch's six rules of thumb (see [`docs/peter-lynch-stock-criteria.jpeg`](docs/peter-lynch-stock-criteria.jpeg)). Each criterion is met, not met, or cannot be assessed when data is missing. This is for information only, not investment advice.
 
-| Symbol | What it shows |
-|---|---|
-| `LYNCH` | Meets every Peter Lynch criterion |
-| `BIGCO` | Fails the criteria: large, expensive, heavily indebted |
-| `SPARSE` | Several metrics not available |
-| `LOSSCO` | Loss-making, so no P/E |
-| `EUROCO` | Listed in euros |
+The stock lookup uses made-up sample data and sample exchange rates for now (no real market data provider is connected). These symbols exist:
+
+| Symbol | What it shows | Peter Lynch checklist |
+|---|---|---|
+| `LYNCH` | A stock that fits the criteria | Meets 6 of 6 |
+| `BIGCO` | Large, expensive, heavily indebted | Meets 0 of 6 |
+| `SPARSE` | Several metrics not available | Meets 2 of 6; 3 could not be assessed |
+| `LOSSCO` | Loss-making, so no P/E | Meets 4 of 6; 2 could not be assessed |
+| `EUROCO` | Listed in euros; market cap converted to dollars | Meets 6 of 6 |
 
 Any other valid symbol shows "No stock found".
 

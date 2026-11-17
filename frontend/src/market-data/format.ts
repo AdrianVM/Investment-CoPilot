@@ -26,6 +26,16 @@ export function formatRatio(value: number, locale?: string) {
   return new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)
 }
 
+/** A threshold as written in a rule: no trailing zeros, e.g. 25 or 0.35. */
+export function formatThreshold(value: number, locale?: string) {
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(value)
+}
+
+/** An exchange rate, with up to six decimals, e.g. 1.085. */
+export function formatRate(value: number, locale?: string) {
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: 6 }).format(value)
+}
+
 export function formatDateTime(iso: string, locale?: string) {
   return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso))
 }

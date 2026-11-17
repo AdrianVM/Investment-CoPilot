@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetStockFundamentalsData, GetStockFundamentalsErrors, GetStockFundamentalsResponses } from './types.gen';
+import type { GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetStockAssessmentData, GetStockAssessmentErrors, GetStockAssessmentResponses, GetStockFundamentalsData, GetStockFundamentalsErrors, GetStockFundamentalsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -35,5 +35,16 @@ export const getCurrentUser = <ThrowOnError extends boolean = false>(options?: O
 export const getStockFundamentals = <ThrowOnError extends boolean = false>(options: Options<GetStockFundamentalsData, ThrowOnError>): RequestResult<GetStockFundamentalsResponses, GetStockFundamentalsErrors, ThrowOnError> => (options.client ?? client).get<GetStockFundamentalsResponses, GetStockFundamentalsErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/market-data/stocks/{symbol}',
+    ...options
+});
+
+/**
+ * Assess a stock against an investment strategy
+ *
+ * Strategy 'peter-lynch' checks Peter Lynch's six criteria. Each criterion is met, not met, or cannot be assessed (missing data or no exchange rate). Values use the fundamentals' units: fractions for percentages, plain ratios, and money with its currency. Computed on demand; for information only.
+ */
+export const getStockAssessment = <ThrowOnError extends boolean = false>(options: Options<GetStockAssessmentData, ThrowOnError>): RequestResult<GetStockAssessmentResponses, GetStockAssessmentErrors, ThrowOnError> => (options.client ?? client).get<GetStockAssessmentResponses, GetStockAssessmentErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/assessments/{strategy}/stocks/{symbol}',
     ...options
 });

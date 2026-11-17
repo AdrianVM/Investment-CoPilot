@@ -6,6 +6,7 @@ import { client } from '../api/generated/client.gen'
 import type { StockFundamentals } from '../api/generated/types.gen'
 import { renderWithQuery } from '../test/renderWithQuery'
 import { formatCompactMoney, formatDateTime, formatMoney, formatPercent, formatRatio } from './format'
+import { lynchAssessment } from '../assessment/testData'
 import { StockLookup } from './StockLookup'
 
 const fetchMock = vi.fn<typeof fetch>()
@@ -33,13 +34,26 @@ const lynch: StockFundamentals = {
   isStale: false,
 }
 
-function respondWith(status: number, body?: unknown) {
-  fetchMock.mockResolvedValue(
-    new Response(body === undefined ? null : JSON.stringify(body), {
-      status,
-      headers: { 'Content-Type': status >= 400 ? 'application/problem+json' : 'application/json' },
-    }),
-  )
+function jsonResponse(status: number, body?: unknown) {
+  return new Response(body === undefined ? null : JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': status >= 400 ? 'application/problem+json' : 'application/json' },
+  })
+}
+
+/** Answers the fundamentals request; the checklist's assessment request gets `assessment` (default: a 503). */
+function respondWith(status: number, body?: unknown, assessment: { status: number; body?: unknown } = { status: 503 }) {
+  fetchMock.mockImplementation(async (input) => {
+    const url = (input as Request).url
+    return url.includes('/api/assessments/')
+      ? jsonResponse(assessment.status, assessment.body)
+      : jsonResponse(status, body)
+  })
+}
+
+/** The fundamentals request only (the checklist is not involved in these assertions). */
+function fundamentalsRequest() {
+  return fetchMock.mock.calls.map(([input]) => input as Request).find((r) => r.url.includes('/market-data/'))!
 }
 
 async function lookUp(symbol: string) {
@@ -81,7 +95,7 @@ describe('StockLookup', () => {
     )
     expect(screen.queryByText(/could not be refreshed/)).not.toBeInTheDocument()
 
-    const request = fetchMock.mock.calls[0][0] as Request
+    const request = fundamentalsRequest()
     expect(request.url).toBe('http://api.test/api/market-data/stocks/LYNCH')
     expect(request.headers.get('Authorization')).toBe('Bearer access-token')
   })
@@ -145,5 +159,23 @@ describe('StockLookup', () => {
     await lookUp('LYNCH')
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Market data could not be loaded.')
+  })
+  it('shows the Peter Lynch checklist below the figures', async () => {
+    respondWith(200, lynch, { status: 200, body: lynchAssessment })
+
+    await lookUp('LYNCH')
+
+    expect(await screen.findByRole('heading', { name: 'Peter Lynch checklist' })).toBeInTheDocument()
+    const request = fetchMock.mock.calls.map(([input]) => input as Request).find((r) => r.url.includes('/assessments/'))
+    expect(request?.url).toBe('http://api.test/api/assessments/peter-lynch/stocks/LYNCH')
+  })
+
+  it('keeps the figures when the checklist cannot be loaded', async () => {
+    respondWith(200, lynch, { status: 503, body: { title: 'Market data unavailable', status: 503 } })
+
+    await lookUp('LYNCH')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('The Peter Lynch checklist could not be loaded.')
+    expect(metric('Price')).toBe(formatMoney(lynch.price!))
   })
 })

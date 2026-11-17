@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { getCurrentUser, getStockFundamentals, type Options } from '../sdk.gen';
-import type { GetCurrentUserData, GetCurrentUserResponse, GetStockFundamentalsData, GetStockFundamentalsError, GetStockFundamentalsResponse } from '../types.gen';
+import { getCurrentUser, getStockAssessment, getStockFundamentals, type Options } from '../sdk.gen';
+import type { GetCurrentUserData, GetCurrentUserResponse, GetStockAssessmentData, GetStockAssessmentError, GetStockAssessmentResponse, GetStockFundamentalsData, GetStockFundamentalsError, GetStockFundamentalsResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -75,4 +75,24 @@ export const getStockFundamentalsOptions = (options: Options<GetStockFundamental
         return data;
     },
     queryKey: getStockFundamentalsQueryKey(options)
+});
+
+export const getStockAssessmentQueryKey = (options: Options<GetStockAssessmentData>) => createQueryKey('getStockAssessment', options);
+
+/**
+ * Assess a stock against an investment strategy
+ *
+ * Strategy 'peter-lynch' checks Peter Lynch's six criteria. Each criterion is met, not met, or cannot be assessed (missing data or no exchange rate). Values use the fundamentals' units: fractions for percentages, plain ratios, and money with its currency. Computed on demand; for information only.
+ */
+export const getStockAssessmentOptions = (options: Options<GetStockAssessmentData>) => queryOptions<GetStockAssessmentResponse, GetStockAssessmentError, GetStockAssessmentResponse, ReturnType<typeof getStockAssessmentQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getStockAssessment({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getStockAssessmentQueryKey(options)
 });

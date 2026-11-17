@@ -4,6 +4,44 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type AssessmentSummary = {
+    met: number;
+    notMet: number;
+    cannotAssess: number;
+    total: number;
+};
+
+export type Comparison = 'lessThan' | 'greaterThan';
+
+export type CriterionAssessment = {
+    id: string;
+    name: string;
+    verdict: Verdict;
+    measures: Array<Measure>;
+    reason: null | UnassessableReason;
+    conversion: null | CurrencyConversion;
+};
+
+export type CurrencyConversion = {
+    original: Money;
+    converted: Money;
+    rate: number;
+    source: string;
+    asOf: string;
+};
+
+export type Measure = {
+    id: string;
+    label: string;
+    value: null | number;
+    unit: MeasureUnit;
+    currency: null | string;
+    comparison: Comparison;
+    threshold: number;
+};
+
+export type MeasureUnit = 'ratio' | 'fraction' | 'money';
+
 export type Money = {
     amount: number;
     currency: string;
@@ -12,9 +50,21 @@ export type Money = {
 export type ProblemDetails = {
     type?: null | string;
     title?: null | string;
-    status?: null | number | string;
+    status?: null | number;
     detail?: null | string;
     instance?: null | string;
+};
+
+export type StockAssessment = {
+    strategyId: string;
+    strategyName: string;
+    symbol: string;
+    companyName: string;
+    source: string;
+    asOf: string;
+    isStale: boolean;
+    criteria: Array<CriterionAssessment>;
+    summary: AssessmentSummary;
 };
 
 export type StockFundamentals = {
@@ -34,11 +84,15 @@ export type StockFundamentals = {
     isStale: boolean;
 };
 
+export type UnassessableReason = 'dataNotAvailable' | 'exchangeRateNotAvailable';
+
 export type UserProfile = {
     id: string;
     email: null | string;
     displayName: null | string;
 };
+
+export type Verdict = 'meets' | 'doesNotMeet' | 'cannotAssess';
 
 export type GetCurrentUserData = {
     body?: never;
@@ -97,3 +151,39 @@ export type GetStockFundamentalsResponses = {
 };
 
 export type GetStockFundamentalsResponse = GetStockFundamentalsResponses[keyof GetStockFundamentalsResponses];
+
+export type GetStockAssessmentData = {
+    body?: never;
+    path: {
+        strategy: string;
+        symbol: string;
+    };
+    query?: never;
+    url: '/api/assessments/{strategy}/stocks/{symbol}';
+};
+
+export type GetStockAssessmentErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+    /**
+     * Service Unavailable
+     */
+    503: ProblemDetails;
+};
+
+export type GetStockAssessmentError = GetStockAssessmentErrors[keyof GetStockAssessmentErrors];
+
+export type GetStockAssessmentResponses = {
+    /**
+     * OK
+     */
+    200: StockAssessment;
+};
+
+export type GetStockAssessmentResponse = GetStockAssessmentResponses[keyof GetStockAssessmentResponses];

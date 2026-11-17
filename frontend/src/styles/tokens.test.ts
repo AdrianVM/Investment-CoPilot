@@ -48,6 +48,12 @@ const textPairs = [
   ['color-danger', 'color-paper'],
   ['color-text', 'color-info-surface'],
   ['color-info', 'color-info-surface'],
+  ['color-pass', 'color-pass-surface'], // verdict label
+  ['color-pass', 'color-surface'],
+  ['color-text', 'color-pass-surface'],
+  ['color-fail', 'color-fail-surface'],
+  ['color-fail', 'color-surface'],
+  ['color-text', 'color-fail-surface'],
 ] as const
 
 /** Non-text: control boundaries, focus ring and status markers, 3:1. */
@@ -59,6 +65,8 @@ const uiPairs = [
   ['color-warning', 'color-paper'], // notice border
   ['color-danger', 'color-paper'],
   ['color-info', 'color-paper'],
+  ['color-pass', 'color-paper'], // verdict icon
+  ['color-fail', 'color-paper'],
 ] as const
 
 describe.each<Theme>(['light', 'dark'])('%s theme', (theme) => {

@@ -83,10 +83,240 @@
           }
         }
       }
+    },
+    "/api/assessments/{strategy}/stocks/{symbol}": {
+      "get": {
+        "tags": [
+          "Assessment"
+        ],
+        "summary": "Assess a stock against an investment strategy",
+        "description": "Strategy 'peter-lynch' checks Peter Lynch's six criteria. Each criterion is met, not met, or cannot be assessed (missing data or no exchange rate). Values use the fundamentals' units: fractions for percentages, plain ratios, and money with its currency. Computed on demand; for information only.",
+        "operationId": "GetStockAssessment",
+        "parameters": [
+          {
+            "name": "strategy",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockAssessment"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AssessmentSummary": {
+        "required": [
+          "met",
+          "notMet",
+          "cannotAssess",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "met": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "notMet": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cannotAssess": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "Comparison": {
+        "enum": [
+          "lessThan",
+          "greaterThan"
+        ]
+      },
+      "CriterionAssessment": {
+        "required": [
+          "id",
+          "name",
+          "verdict",
+          "measures",
+          "reason",
+          "conversion"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict"
+          },
+          "measures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Measure"
+            }
+          },
+          "reason": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/UnassessableReason"
+              }
+            ]
+          },
+          "conversion": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CurrencyConversion"
+              }
+            ]
+          }
+        }
+      },
+      "CurrencyConversion": {
+        "required": [
+          "original",
+          "converted",
+          "rate",
+          "source",
+          "asOf"
+        ],
+        "type": "object",
+        "properties": {
+          "original": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "converted": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "source": {
+            "type": "string"
+          },
+          "asOf": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Measure": {
+        "required": [
+          "id",
+          "label",
+          "value",
+          "unit",
+          "currency",
+          "comparison",
+          "threshold"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/MeasureUnit"
+          },
+          "currency": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "comparison": {
+            "$ref": "#/components/schemas/Comparison"
+          },
+          "threshold": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "MeasureUnit": {
+        "enum": [
+          "ratio",
+          "fraction",
+          "money"
+        ]
+      },
       "Money": {
         "required": [
           "amount",
@@ -119,11 +349,9 @@
             ]
           },
           "status": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
-              "integer",
-              "string"
+              "integer"
             ],
             "format": "int32"
           },
@@ -138,6 +366,53 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "StockAssessment": {
+        "required": [
+          "strategyId",
+          "strategyName",
+          "symbol",
+          "companyName",
+          "source",
+          "asOf",
+          "isStale",
+          "criteria",
+          "summary"
+        ],
+        "type": "object",
+        "properties": {
+          "strategyId": {
+            "type": "string"
+          },
+          "strategyName": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "companyName": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "asOf": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isStale": {
+            "type": "boolean"
+          },
+          "criteria": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CriterionAssessment"
+            }
+          },
+          "summary": {
+            "$ref": "#/components/schemas/AssessmentSummary"
           }
         }
       },
@@ -243,6 +518,13 @@
           }
         }
       },
+      "UnassessableReason": {
+        "enum": [
+          "dataNotAvailable",
+          "exchangeRateNotAvailable",
+          null
+        ]
+      },
       "UserProfile": {
         "required": [
           "id",
@@ -268,6 +550,13 @@
             ]
           }
         }
+      },
+      "Verdict": {
+        "enum": [
+          "meets",
+          "doesNotMeet",
+          "cannotAssess"
+        ]
       }
     },
     "securitySchemes": {
@@ -290,6 +579,9 @@
     },
     {
       "name": "MarketData"
+    },
+    {
+      "name": "Assessment"
     }
   ]
 }
