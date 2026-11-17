@@ -28,10 +28,221 @@
           }
         }
       }
+    },
+    "/api/market-data/stocks/{symbol}": {
+      "get": {
+        "tags": [
+          "MarketData"
+        ],
+        "summary": "Get a stock's current fundamentals by ticker symbol",
+        "description": "Money is in the stock's listing currency; percentages are fractions (0.15 = 15 %). Metrics the data source does not supply are null. When the source is unavailable, the last cached data is returned with isStale set.",
+        "operationId": "GetStockFundamentals",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockFundamentals"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "Money": {
+        "required": [
+          "amount",
+          "currency"
+        ],
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
+          }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "StockFundamentals": {
+        "required": [
+          "symbol",
+          "companyName",
+          "currency",
+          "price",
+          "marketCap",
+          "trailingPe",
+          "forwardPe",
+          "epsGrowth",
+          "institutionalOwnership",
+          "insiderOwnership",
+          "debtToEquity",
+          "source",
+          "asOf",
+          "isStale"
+        ],
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "companyName": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "price": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Money"
+              }
+            ]
+          },
+          "marketCap": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Money"
+              }
+            ]
+          },
+          "trailingPe": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "forwardPe": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "epsGrowth": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "institutionalOwnership": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "insiderOwnership": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "debtToEquity": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "source": {
+            "type": "string"
+          },
+          "asOf": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isStale": {
+            "type": "boolean"
+          }
+        }
+      },
       "UserProfile": {
         "required": [
           "id",
@@ -76,6 +287,9 @@
   "tags": [
     {
       "name": "Users"
+    },
+    {
+      "name": "MarketData"
     }
   ]
 }

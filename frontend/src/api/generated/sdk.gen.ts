@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses } from './types.gen';
+import type { GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetStockFundamentalsData, GetStockFundamentalsErrors, GetStockFundamentalsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -24,5 +24,16 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 export const getCurrentUser = <ThrowOnError extends boolean = false>(options?: Options<GetCurrentUserData, ThrowOnError>): RequestResult<GetCurrentUserResponses, GetCurrentUserErrors, ThrowOnError> => (options?.client ?? client).get<GetCurrentUserResponses, GetCurrentUserErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/me',
+    ...options
+});
+
+/**
+ * Get a stock's current fundamentals by ticker symbol
+ *
+ * Money is in the stock's listing currency; percentages are fractions (0.15 = 15 %). Metrics the data source does not supply are null. When the source is unavailable, the last cached data is returned with isStale set.
+ */
+export const getStockFundamentals = <ThrowOnError extends boolean = false>(options: Options<GetStockFundamentalsData, ThrowOnError>): RequestResult<GetStockFundamentalsResponses, GetStockFundamentalsErrors, ThrowOnError> => (options.client ?? client).get<GetStockFundamentalsResponses, GetStockFundamentalsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/market-data/stocks/{symbol}',
     ...options
 });

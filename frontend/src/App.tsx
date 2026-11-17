@@ -1,4 +1,5 @@
 import { useAuth } from './auth/authContext'
+import { StockLookup } from './market-data/StockLookup'
 import { ProfileCard } from './profile/ProfileCard'
 
 export default function App() {
@@ -21,7 +22,16 @@ export default function App() {
       </header>
       <main>
         {error && <p role="alert">Signing in failed: {error.message}</p>}
-        {isLoading ? <p>Checking your sign-in…</p> : user ? <ProfileCard /> : <p>Sign in to see your profile.</p>}
+        {isLoading ? (
+          <p>Checking your sign-in…</p>
+        ) : user ? (
+          <>
+            <ProfileCard />
+            <StockLookup />
+          </>
+        ) : (
+          <p>Sign in to see your profile.</p>
+        )}
       </main>
     </>
   )

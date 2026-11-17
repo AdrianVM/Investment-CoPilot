@@ -4,6 +4,36 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type Money = {
+    amount: number;
+    currency: string;
+};
+
+export type ProblemDetails = {
+    type?: null | string;
+    title?: null | string;
+    status?: null | number | string;
+    detail?: null | string;
+    instance?: null | string;
+};
+
+export type StockFundamentals = {
+    symbol: string;
+    companyName: string;
+    currency: string;
+    price: null | Money;
+    marketCap: null | Money;
+    trailingPe: null | number;
+    forwardPe: null | number;
+    epsGrowth: null | number;
+    institutionalOwnership: null | number;
+    insiderOwnership: null | number;
+    debtToEquity: null | number;
+    source: string;
+    asOf: string;
+    isStale: boolean;
+};
+
 export type UserProfile = {
     id: string;
     email: null | string;
@@ -32,3 +62,38 @@ export type GetCurrentUserResponses = {
 };
 
 export type GetCurrentUserResponse = GetCurrentUserResponses[keyof GetCurrentUserResponses];
+
+export type GetStockFundamentalsData = {
+    body?: never;
+    path: {
+        symbol: string;
+    };
+    query?: never;
+    url: '/api/market-data/stocks/{symbol}';
+};
+
+export type GetStockFundamentalsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Service Unavailable
+     */
+    503: ProblemDetails;
+};
+
+export type GetStockFundamentalsError = GetStockFundamentalsErrors[keyof GetStockFundamentalsErrors];
+
+export type GetStockFundamentalsResponses = {
+    /**
+     * OK
+     */
+    200: StockFundamentals;
+};
+
+export type GetStockFundamentalsResponse = GetStockFundamentalsResponses[keyof GetStockFundamentalsResponses];

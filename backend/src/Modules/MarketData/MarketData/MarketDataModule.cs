@@ -1,7 +1,13 @@
 using InvestmentCoPilot.MarketData.Contracts;
 using InvestmentCoPilot.MarketData.Persistence;
+using InvestmentCoPilot.MarketData.Providers;
+using InvestmentCoPilot.MarketData.Providers.Fake;
+using InvestmentCoPilot.MarketData.Stocks;
 using InvestmentCoPilot.SharedKernel.Persistence;
+using InvestmentCoPilot.SharedKernel.Web;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace InvestmentCoPilot.MarketData;
 
@@ -11,11 +17,23 @@ public static class MarketDataModule
     public static IServiceCollection AddMarketDataModule(this IServiceCollection services)
     {
         services.AddModuleDbContext<MarketDataDbContext>();
+        services.TryAddSingleton(TimeProvider.System);
+
+        services.AddOptions<MarketDataOptions>().BindConfiguration(MarketDataOptions.SectionName).ValidateOnStart();
+        services.AddSingleton<IValidateOptions<MarketDataOptions>, MarketDataOptionsValidator>();
+
+        // Every available provider; MarketData:Provider selects one.
+        services.AddSingleton<IMarketDataProvider, FakeMarketDataProvider>();
+
+        services.AddScoped<StockLookupService>();
         services.AddScoped<IMarketDataModule, MarketDataModuleFacade>();
+        services.AddSingleton<IEndpointModule, MarketDataEndpoints>();
         return services;
     }
 }
 
-internal sealed class MarketDataModuleFacade : IMarketDataModule
+internal sealed class MarketDataModuleFacade(StockLookupService lookup) : IMarketDataModule
 {
+    public Task<StockLookupResult> GetStockFundamentalsAsync(string symbol, CancellationToken cancellationToken = default) =>
+        lookup.LookupAsync(symbol, cancellationToken);
 }

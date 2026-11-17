@@ -63,7 +63,19 @@ npm ci
 npm run dev
 ```
 
-Open <http://localhost:5173>, choose **Sign in**, and sign in as `alice` or `bob`. The app shows the signed-in user's profile.
+Open <http://localhost:5173>, choose **Sign in**, and sign in as `alice` or `bob`. The app shows the signed-in user's profile and a stock lookup.
+
+The stock lookup uses made-up sample data for now (no real market data provider is connected). These symbols exist:
+
+| Symbol | What it shows |
+|---|---|
+| `LYNCH` | Meets every Peter Lynch criterion |
+| `BIGCO` | Fails the criteria: large, expensive, heavily indebted |
+| `SPARSE` | Several metrics not available |
+| `LOSSCO` | Loss-making, so no P/E |
+| `EUROCO` | Listed in euros |
+
+Any other valid symbol shows "No stock found".
 
 ## Tests
 
