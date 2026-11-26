@@ -110,3 +110,13 @@ jobs:
       - name: Check generated API files
         run: npm run check:api
         working-directory: frontend
+
+  images:
+    name: Container images build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The API and web images from docker-compose.yml; fails the pull request when a Dockerfile breaks.
+      - name: Build images
+        run: docker compose build api web

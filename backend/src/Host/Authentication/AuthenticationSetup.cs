@@ -29,6 +29,11 @@ internal static class AuthenticationSetup
                 jwt.Authority = auth.Value.Authority;
                 jwt.Audience = auth.Value.Audience;
                 jwt.RequireHttpsMetadata = auth.Value.RequireHttpsMetadata;
+                if (!string.IsNullOrWhiteSpace(auth.Value.MetadataAddress))
+                {
+                    // Download discovery and signing keys from here; the issuer is still checked against Authority.
+                    jwt.MetadataAddress = auth.Value.MetadataAddress;
+                }
 
                 // Keep standard claim names (sub, email, name) instead of mapping them to long WS-* URIs.
                 jwt.MapInboundClaims = false;

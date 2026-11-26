@@ -1,0 +1,7 @@
+# Build context for frontend/Dockerfile.
+node_modules/
+dist/
+tools/
+coverage/
+# Personal overrides stay out of the image, so builds are the same on every machine.
+.env*.local
