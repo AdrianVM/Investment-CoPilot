@@ -66,6 +66,7 @@ The API validates JWT access tokens from any standards-compliant OpenID Connect 
 | `Auth:Authority` | The provider's issuer URL |
 | `Auth:Audience` | The audience tokens must be issued for |
 | `Auth:RequireHttpsMetadata` | `true` except for a local development provider |
+| `Auth:MetadataAddress` | Optional. Where to download the provider's discovery document and signing keys, when the API reaches the provider at another address than the issuer in tokens (for example `http://keycloak:8080/...` inside Docker Compose). Tokens are still validated against the issuer. Unset: derived from `Auth:Authority`. |
 | `Auth:Claims:Email`, `Auth:Claims:DisplayName` | Claim names for the user's email and name (defaults `email`, `name`) |
 
 Every endpoint requires a valid token, except `/health/live` and `/health/ready`. On a user's first request, the Identity module creates a local user, keyed by the token's issuer and subject. Code reads the current user through `ICurrentUser`.

@@ -18,6 +18,14 @@ public sealed class AuthOptions
     [Required]
     public string Audience { get; set; } = "";
 
+    /// <summary>
+    /// Optional address of the provider's OIDC discovery document, when the API must reach the provider at a different
+    /// address than the issuer users see (for example <c>http://keycloak:8080/...</c> inside Docker Compose while tokens
+    /// say <c>http://localhost:8080/...</c>). Tokens are still validated against the issuer. Unset: derived from
+    /// <see cref="Authority"/>.
+    /// </summary>
+    public string? MetadataAddress { get; set; }
+
     /// <summary>Require HTTPS for the discovery document. Only turn this off for a local development provider.</summary>
     public bool RequireHttpsMetadata { get; set; } = true;
 }

@@ -1,0 +1,9 @@
+# Build context for backend/Dockerfile: only what the API image needs.
+**/bin/
+**/obj/
+tests/
+openapi.json
+*.sln
+README.md
+# Holds local database credentials; containers get every setting from their environment instead.
+src/Host/appsettings.Development.json

@@ -27,6 +27,9 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_HEALTH_ENABLED: "true"
       KC_HOSTNAME: http://localhost:8080
+      # Requests that reach Keycloak as keycloak:8080 (from the api container) get back-channel URLs such as the
+      # signing keys on that address, while tokens keep the issuer the browser sees (localhost:8080).
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
     ports:
       - "8080:8080"
     volumes:
@@ -36,6 +39,45 @@ services:
       interval: 10s
       timeout: 5s
       retries: 30
+
+  api:
+    # The API, built from backend/. Rebuild after code changes with `docker compose up --build`.
+    build: ./backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development # applies database migrations at startup; serves /openapi/v1.json
+      ConnectionStrings__Database: Host=postgres;Port=5432;Database=investment_copilot;Username=copilot;Password=copilot
+      Auth__Authority: http://localhost:8080/realms/investment-copilot # the issuer the browser sees
+      Auth__MetadataAddress: http://keycloak:8080/realms/investment-copilot/.well-known/openid-configuration
+      Auth__Audience: investment-copilot-api
+      Auth__RequireHttpsMetadata: "false"
+    ports:
+      - "5080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      # The runtime image has no curl; ask /health/ready over bash's /dev/tcp (its /bin/sh is dash, without /dev/tcp).
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/8080 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q ' 200 '"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  web:
+    # The web app, built from frontend/ with the local sign-in settings and served by nginx, which forwards /api.
+    build: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   postgres-data:
